@@ -84,8 +84,26 @@ CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
 
 
 # Determine the Java command to use to start the JVM.
-if [ -z "$JAVA_HOME" ] && [ -d "/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home" ]; then
-    JAVA_HOME="/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home"
+# On macOS, attempt to discover Homebrew's OpenJDK if JAVA_HOME is not set
+if [ -z "$JAVA_HOME" ] && [ "$darwin" = "true" ]; then
+    # Try to use brew to find openjdk@17 prefix
+    if command -v brew >/dev/null 2>&1; then
+        BREW_JAVA_PREFIX=$(brew --prefix openjdk@17 2>/dev/null)
+        if [ -n "$BREW_JAVA_PREFIX" ] && [ -d "$BREW_JAVA_PREFIX/libexec/openjdk.jdk/Contents/Home" ]; then
+            JAVA_HOME="$BREW_JAVA_PREFIX/libexec/openjdk.jdk/Contents/Home"
+        fi
+    fi
+
+    # Fallback to checking known Homebrew paths if brew command didn't work
+    if [ -z "$JAVA_HOME" ]; then
+        # Check Apple Silicon path
+        if [ -d "/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home" ]; then
+            JAVA_HOME="/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home"
+        # Check Intel Mac path
+        elif [ -d "/usr/local/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home" ]; then
+            JAVA_HOME="/usr/local/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home"
+        fi
+    fi
 fi
 
 if [ -n "$JAVA_HOME" ] ; then
